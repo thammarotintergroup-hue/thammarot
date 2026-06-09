@@ -76,7 +76,7 @@
       const uid = document.getElementById("lineUid").value;
       const phone = document.getElementById("phone").value;
       
-      // 🎯 [จุดแก้ไข] ปรับแต่งหน้าต่างเตือนกรณีลืมกรอกเบอร์โทรศัพท์ให้จัดเรียงสวยงาม ไม่ตกบรรทัดมั่ว
+      
       if(!phone) { 
         Swal.fire({ 
           icon: 'warning', 
@@ -113,7 +113,7 @@
           Swal.fire({ 
             icon: 'error', 
             title: 'ไม่สามารถลงทะเบียนซ้ำได้', 
-            text: 'คุณเคยลงทะเบียนวิริยะธรรมโรจน์ ประกันภัยไปแล้วครับ',
+            text: 'คุณเคยลงทะเบียนไปแล้วครับ',
             confirmButtonColor: '#d33'
           });
           document.getElementById("status").style.color = "red";
