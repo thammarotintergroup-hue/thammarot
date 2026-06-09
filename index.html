@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>วิริยะธรรมโรจน์ ประกันภัย</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+    h2 { color: #2c3e50; margin-top: 0; text-align: center; margin-bottom: 25px; font-size: 22px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #7f8c8d; font-size: 14px; font-weight: bold; }
+    input[type="text"] { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; box-sizing: border-box; font-size: 15px; color: #2c3e50; background-color: #f8f9fa; }
+    input[readonly] { background-color: #e9ecef; color: #495057; cursor: not-allowed; }
+    button { width: 100%; padding: 14px; background-color: #2ecc71; border: none; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+    button:hover { background-color: #27ae60; }
+    button:disabled { background-color: #95a5a6 !important; cursor: not-allowed; }
+    .status-text { text-align: center; color: #e67e22; font-weight: bold; margin-top: 15px; font-size: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>วิริยะธรรมโรจน์ ประกันภัย</h2>
+    
+    <div class="form-group">
+      <label>ชื่อ LINE</label>
+      <input type="text" id="lineName" value="กำลังโหลดข้อมูล..." readonly>
+    </div>
+    
+    <div class="form-group">
+      <label>LINE User ID</label>
+      <input type="text" id="lineUid" value="กำลังโหลดข้อมูล..." readonly>
+    </div>
+    
+    <div class="form-group">
+      <label>เบอร์โทรศัพท์ (ไม่มีใส่ 0 ได้เลยครับ)</label>
+      <input type="text" id="phone" placeholder="กรอกเบอร์โทรศัพท์ของคุณ">
+    </div>
+    
+    <button id="submitBtn" onclick="submitForm()">บันทึกข้อมูล</button>
+    <div id="status" class="status-text">กำลังโหลดระบบ LIFF...</div>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const MY_LIFF_ID = "2010344240-qIELfDoU"; 
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxIv8bLBf8yoIntrxN7OFp5KrDG3cHfSaPmYQN3-GG9FfQDlc9ChnZXPsDwDSOOb9ln/exec"; 
+
+    function initializeLiff() {
+      liff.init({ liffId: MY_LIFF_ID })
+        .then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            liff.getProfile()
+              .then(profile => {
+                document.getElementById("lineName").value = profile.displayName;
+                document.getElementById("lineUid").value = profile.userId;
+                document.getElementById("status").innerText = "เชื่อมต่อระบบ LINE สำเร็จ ✅";
+                document.getElementById("status").style.color = "#2ecc71";
+              })
+              .catch(err => { 
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ดึงชื่อไม่สำเร็จ: ' + err.message });
+              });
+          }
+        })
+        .catch(err => { 
+          Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'LIFF โหลดไม่สำเร็จ: ' + err.message });
+        });
+    }
+
+    function submitForm() {
+      const name = document.getElementById("lineName").value;
+      const uid = document.getElementById("lineUid").value;
+      const phone = document.getElementById("phone").value;
+      
+      // 🎯 [จุดแก้ไข] ปรับแต่งหน้าต่างเตือนกรณีลืมกรอกเบอร์โทรศัพท์ให้จัดเรียงสวยงาม ไม่ตกบรรทัดมั่ว
+      if(!phone) { 
+        Swal.fire({ 
+          icon: 'warning', 
+          title: 'คำเตือน', 
+          html: 'กรุณากรอกเบอร์โทรศัพท์ก่อนครับ<br><small style="color: #e67e22; font-weight: bold; margin-top: 5px; display: inline-block;">(หากไม่มีให้ใส่เลข 0 ได้เลยครับ)</small>',
+          confirmButtonColor: '#e67e22'
+        });
+        return; 
+      }
+      
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.innerText = "กำลังบันทึกข้อมูล...";
+      
+      document.getElementById("status").style.color = "#e67e22";
+      document.getElementById("status").innerText = "กำลังบันทึกข้อมูล...";
+      
+      fetch(BACKEND_URL, {
+        method: "POST",
+        body: JSON.stringify({ lineName: name, lineUid: uid, phone: phone })
+      })
+      .then(res => res.text())
+      .then(response => {
+        if(response === "SUCCESS") {
+          Swal.fire({ 
+            icon: 'success', 
+            title: 'บันทึกสำเร็จ!', 
+            text: 'บันทึกข้อมูลเรียบร้อยแล้วครับ! 🎉',
+            confirmButtonColor: '#2ecc71'
+          }).then(() => {
+            liff.closeWindow();
+          });
+        } else if(response === "DUPLICATE") {
+          Swal.fire({ 
+            icon: 'error', 
+            title: 'ไม่สามารถลงทะเบียนซ้ำได้', 
+            text: 'คุณเคยลงทะเบียนวิริยะธรรมโรจน์ ประกันภัยไปแล้วครับ',
+            confirmButtonColor: '#d33'
+          });
+          document.getElementById("status").style.color = "red";
+          document.getElementById("status").innerText = "บัญชีนี้เคยลงทะเบียนไปแล้วครับ";
+          
+          btn.disabled = false;
+          btn.innerText = "บันทึกข้อมูล";
+        } else {
+          Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดฝั่งชีต: ' + response });
+          btn.disabled = false;
+          btn.innerText = "บันทึกข้อมูล";
+        }
+      })
+      .catch(err => {
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ส่งข้อมูลล้มเหลว: ' + err.message });
+        btn.disabled = false;
+        btn.innerText = "บันทึกข้อมูล";
+      });
+    }
+
+    window.onload = function() {
+      initializeLiff();
+    };
+  </script>
+</body>
+</html>
